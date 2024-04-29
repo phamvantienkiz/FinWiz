@@ -1,0 +1,2 @@
+# FinWiz
+Finance Wizard
