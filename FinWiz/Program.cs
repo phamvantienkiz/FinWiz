@@ -5,6 +5,9 @@ builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
 
+//Register Syncfusion license
+Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense("Mgo+DSMBMAY9C3t2UFhhQlJBfV5AQmBIYVp/TGpJfl96cVxMZVVBJAtUQF1hTX5WdkRiWXpXcXNUTmFU");
+
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
