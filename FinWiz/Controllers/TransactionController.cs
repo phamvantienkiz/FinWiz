@@ -7,25 +7,37 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using FinWiz.Models;
 using static System.Runtime.InteropServices.JavaScript.JSType;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authorization;
 
 namespace FinWiz.Controllers
 {
+    [Authorize]
     public class TransactionController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly UserManager<ApplicationUser> _userManager;
         //private readonly List<TransactionViewModel> listTransaction;
 
-        public TransactionController(ApplicationDbContext context)
+        public TransactionController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
         // GET: Transaction
         public async Task<IActionResult> Index()
         {
+            var user = await _userManager.GetUserAsync(User);
             PopulateCategories();
-            var expenses = _context.Expenses.ToList();
-            var incomes = _context.Incomes.ToList();
+            var expenses = _context.Expenses
+                .Include(c => c.Category)
+                .Where(u => u.UserId == user.Id).ToList();
+
+            var incomes = _context.Incomes
+                .Include(c => c.Category)
+                .Where(u => u.UserId == user.Id).ToList();
+
             var listTransaction = new List<TransactionViewModel>();
 
             foreach (var expense in expenses)
@@ -60,7 +72,7 @@ namespace FinWiz.Controllers
             return View(transactionViewModel);
         }*/
 
-        // GET: Transaction/AddOrEdit
+        // GET: Transaction/Add
         public IActionResult Add(int id = 0/*, string type = "Expense"*/)
         {
             PopulateCategories();
@@ -97,13 +109,14 @@ namespace FinWiz.Controllers
         {
             if (!ModelState.IsValid)
             {
+                var user = await _userManager.GetUserAsync(User);
                 if (transactionViewModel.TransactionId == 0)
                 {
                     if (transactionViewModel.Type.Equals("Expense"))
                     {
                         var newExpense = new Expense
                         {
-                            UserId = "User3",
+                            UserId = user.Id,
                             CategoryId = transactionViewModel.CategoryId,
                             Category = transactionViewModel.Category,
                             Amount = transactionViewModel.Amount,
@@ -116,7 +129,7 @@ namespace FinWiz.Controllers
                     {
                         var newIncome = new Income
                         {
-                            UserId = "User3",
+                            UserId = user.Id,
                             CategoryId = transactionViewModel.CategoryId,
                             Category = transactionViewModel.Category,
                             Amount = transactionViewModel.Amount,

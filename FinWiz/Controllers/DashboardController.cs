@@ -1,32 +1,38 @@
 ﻿using FinWiz.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 
 namespace FinWiz.Controllers
 {
+    [Authorize]
     public class DashboardController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public DashboardController(ApplicationDbContext context)
+        public DashboardController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
         public async Task<IActionResult> Index()
         {
+            var user = await _userManager.GetUserAsync(User);
             //Last 7 days
             DateTime StartDate = DateTime.Today.AddDays(-6);
             DateTime EndDate = DateTime.Today;
 
             List<Expense> selectExpense = await _context.Expenses
                 .Include(x => x.Category)
-                .Where(d => d.Date >= StartDate && d.Date <= EndDate).ToListAsync();
+                .Where(d => d.UserId == user.Id && d.Date >= StartDate && d.Date <= EndDate).ToListAsync();
 
             List<Income> selectIncome = await _context.Incomes
                 .Include(x => x.Category)
-                .Where(d => d.Date >= StartDate && d.Date <= EndDate).ToListAsync();
+                .Where(d => d.UserId == user.Id && d.Date >= StartDate && d.Date <= EndDate).ToListAsync();
 
             //Total Income
             decimal totalIncome = selectIncome.Sum(a => a.Amount);
