@@ -11,6 +11,7 @@
             <form asp-action="AddOrEdit">
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                 <input type="hidden" name="CategoryId" value="@Model.CategoryId" />
+                <input type="hidden" name="UserId" value="@Model.UserId" />
 
                 <div class="mb-3">
                     <div class="e-btn-group custom-rbt-group">

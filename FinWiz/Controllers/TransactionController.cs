@@ -187,6 +187,7 @@ namespace FinWiz.Controllers
         {
             if (ModelState.IsValid)
             {
+                var user = await _userManager.GetUserAsync(User);
                 if (transactionViewModel.Type.Equals("Expense"))
                 {
                     var expense = _context.Expenses.Find(id);
@@ -199,6 +200,21 @@ namespace FinWiz.Controllers
                         expense.Date = transactionViewModel.Date;
 
                         _context.Expenses.Update(expense);
+                    } else
+                    {
+                        var newExpense = new Expense
+                        {
+                            UserId = user.Id,
+                            CategoryId = transactionViewModel.CategoryId,
+                            Category = transactionViewModel.Category,
+                            Amount = transactionViewModel.Amount,
+                            Note = transactionViewModel.Note,
+                            Date = transactionViewModel.Date
+                        };
+                        _context.Expenses.Add(newExpense);
+
+                        var isIncome = _context.Incomes.Find(id);
+                        _context.Incomes.Remove(isIncome);
                     }
                     await _context.SaveChangesAsync();
                     return RedirectToAction("Index");
@@ -215,6 +231,22 @@ namespace FinWiz.Controllers
                         income.Date = transactionViewModel.Date;
 
                         _context.Incomes.Update(income);
+                    }
+                    else
+                    {
+                        var newIncome = new Income
+                        {
+                            UserId = user.Id,
+                            CategoryId = transactionViewModel.CategoryId,
+                            Category = transactionViewModel.Category,
+                            Amount = transactionViewModel.Amount,
+                            Note = transactionViewModel.Note,
+                            Date = transactionViewModel.Date
+                        };
+                        _context.Incomes.Add(newIncome);
+
+                        var isExpense = _context.Expenses.Find(id);
+                        _context.Expenses.Remove(isExpense);
                     }
                     await _context.SaveChangesAsync();
                     return RedirectToAction("Index");

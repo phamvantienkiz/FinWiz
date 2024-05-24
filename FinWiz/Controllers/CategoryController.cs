@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace FinWiz.Controllers
 {
-    //[Authorize]
+    [Authorize]
     public class CategoryController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -26,8 +26,8 @@ namespace FinWiz.Controllers
         // GET: Category
         public async Task<IActionResult> Index()
         {
-
-            return View(await _context.Categories.ToListAsync());
+            var user = await _userManager.GetUserAsync(User);
+            return View(await _context.Categories.Where(u => u.UserId == user.Id).ToListAsync());
         }
 
         // GET: Category/Details/5
@@ -68,15 +68,33 @@ namespace FinWiz.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddOrEdit([Bind("CategoryId,Title,Icon,Type")] Category category)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
+                var user = await _userManager.GetUserAsync(User);
                 if (category.CategoryId == 0)
                 {
-                    _context.Add(category);
+                    var newCategory = new Category
+                    {
+                        UserId = user.Id,
+                        Title = category.Title,
+                        Icon = category.Icon,
+                        Type = category.Type,
+
+                    };
+                    _context.Add(newCategory);
                 }
                 else
                 {
-                    _context.Update(category);
+                    var categoryUpdate = _context.Categories.Find(category.CategoryId);
+                    if (categoryUpdate != null)
+                    {
+                        //categoryUpdate.CategoryId = category.CategoryId;
+                        categoryUpdate.UserId = user.Id;
+                        categoryUpdate.Title = category.Title;
+                        categoryUpdate.Icon = category.Icon;
+                        categoryUpdate.Type = category.Type;
+                    }
+                    _context.Update(categoryUpdate);
                 }
 
                 await _context.SaveChangesAsync();
